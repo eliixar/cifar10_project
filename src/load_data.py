@@ -9,14 +9,12 @@ sets in the form of lists containing tuples of (image,class label.)
 """
 def load_cifar10():
 
-    transform = transforms.ToTensor()
-
     train_set = torchvision.datasets.CIFAR10(
-    root="../data", train=True, download=True, transform=transform
-)
+    root="G:/My Drive/COMP472/project/data", train=True, download=True)
+
     test_set = torchvision.datasets.CIFAR10(
-    root="../data", train=False, download=True, transform=transform
-)
+    root="G:/My Drive/COMP472/project/data", train=False, download=True)
+
     # cifar10 has 10 classes, initialize 10 zeroes to count
     train_count = [0] * 10
     test_count = [0] * 10
