@@ -7,6 +7,8 @@ import os
 
 # local modules
 from src.models.naive_bayes import GaussianNaiveBayes
+from src.models.decision_tree import DecisionTreeClassifier
+
 
 # class labels for matrix legend
 CIFAR10_LABELS = [
@@ -105,6 +107,49 @@ def main():
     y_pred_sklearn = sklearn_gnb.predict(X_test)
     full_report("Scikit-Learn GaussianNB", y_test, y_pred_sklearn)
 
+        
+    # custom decision tree training
+    print("\n=== Training Custom Decision Tree ===")
+
+    dt_path = "saved_models/custom_decision_tree.pkl"
+
+    if os.path.exists(dt_path):
+        print("Loading saved Decision Tree model...")
+        dt = joblib.load(dt_path)
+    else:
+        print("Training Decision Tree (max_depth=50) and saving.../n "
+        "(Results may take a few minutes to process.)")
+        dt = DecisionTreeClassifier(max_depth=50)
+        dt.fit(X_train, y_train)
+        joblib.dump(dt, dt_path)
+
+    y_pred_dt = dt.predict(X_test)
+    full_report("Custom Decision Tree", y_test, y_pred_dt)
+    
+    # Decision Tree depth experiment
+    print("\n=== Decision Tree Depth Experiment ===")
+    depths = [2, 5, 10, 20, 30]
+
+    # even at small depths the process takes long, so we reduce the data size
+    X_small = X_train[:2000]
+    y_small = y_train[:2000]
+
+    depth_results = []
+
+    for d in depths:
+        print(f"\nTraining Decision Tree with max_depth = {d} (Results may take a few minutes to process.)")
+        dt = DecisionTreeClassifier(max_depth=d)
+        # use small data
+        dt.fit(X_small, y_small)
+        y_pred_d = dt.predict(X_test)
+
+        acc_d = (y_pred_d == y_test).mean()
+        depth_results.append((d, acc_d))
+        print(f"Test accuracy at depth {d}: {acc_d:.3f}")
+
+    print("\nSummary of depth experiment (depth, accuracy):")
+    for d, acc in depth_results:
+        print(f"Depth {d:2d} → accuracy = {acc:.3f}")
 
     print("\n=== DONE. Confusion matrices saved as PNG files. ===")
 
