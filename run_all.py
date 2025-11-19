@@ -8,6 +8,14 @@ from src.models.naive_bayes import GaussianNaiveBayes
 from src.evaluate import evaluate_model
 from src.pca_reduce import apply_pca
 
+# class labels for matrix legend
+CIFAR10_LABELS = [
+    "airplane", "automobile", "bird", "cat",
+    "deer", "dog", "frog", "horse",
+    "ship", "truck"
+]
+
+
 """
 Load the reduced PCA features of size 50x1 and return them.
 """
@@ -34,19 +42,24 @@ def full_report(name, y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
     print("\nConfusion Matrix:\n", cm)
 
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(10, 8))
     plt.imshow(cm, cmap="Blues")
-    plt.title(f"Confusion Matrix – {name}")
+    plt.title(f"Confusion Matrix – {name}", fontsize=16)
     plt.colorbar()
-    plt.xlabel("Predicted")
-    plt.ylabel("True")
+
+    plt.xticks(ticks=np.arange(10), labels=CIFAR10_LABELS, rotation=45, ha="right", fontsize=10)
+    plt.yticks(ticks=np.arange(10), labels=CIFAR10_LABELS, fontsize=10)
+
+    plt.xlabel("Predicted Label", fontsize=12, fontweight="bold")
+    plt.ylabel("True Label", fontsize=12, fontweight="bold")
+    plt.subplots_adjust(bottom=0.25)
+
     filename = name.replace(" ", "_").replace("(", "").replace(")", "").lower()
     plt.savefig(f"confusion_matrices/{filename}.png") # save cm to a folder
     plt.close()
 
 
 # main
-
 def main():
 
     print("\n=== Loading Features ===")
