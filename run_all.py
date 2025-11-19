@@ -151,6 +151,13 @@ def main():
     for d, acc in depth_results:
         print(f"Depth {d:2d} → accuracy = {acc:.3f}")
 
+    #  train scikit learn decision tree 
+    from src.models.sklearn_decision_tree import run_sklearn_decision_tree
+
+    print("\n=== Training Scikit-Learn Decision Tree (max_depth=50) ===")
+    y_true_dt, y_pred_dt = run_sklearn_decision_tree()
+    full_report("Scikit-Learn Decision Tree (Depth 50)", y_true_dt, y_pred_dt)
+
     print("\n=== DONE. Confusion matrices saved as PNG files. ===")
 
 
