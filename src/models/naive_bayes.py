@@ -5,7 +5,6 @@ class GaussianNaiveBayes:
     """
     Function that finds the mean, variance and priors of each
     feature vector in all classes of a set.
-    Saves the model to a folder to avoid having to re-train.
     """
     def fit(self, X, y):
         self.classes = np.unique(y) # find class labels
@@ -20,8 +19,6 @@ class GaussianNaiveBayes:
             self.vars[c] = X_c.var(axis=0) + 1e-6  # add small number to avoid divide-by-zero
             # compute prior (num samples in c / total num samples)
             self.priors[c] = len(X_c) / len(X)
-
-        joblib.dump(self, "saved_models/custom_gnb.pkl")
 
         return self
 

@@ -7,8 +7,6 @@ import os
 
 # local modules
 from src.models.naive_bayes import GaussianNaiveBayes
-from src.evaluate import evaluate_model
-from src.pca_reduce import apply_pca
 
 # class labels for matrix legend
 CIFAR10_LABELS = [
@@ -18,9 +16,6 @@ CIFAR10_LABELS = [
 ]
 
 
-# -------------------------------------------------------------------
-# Make sure saved_models/ exists
-# -------------------------------------------------------------------
 os.makedirs("saved_models", exist_ok=True)
 os.makedirs("confusion_matrices", exist_ok=True)
 
@@ -97,8 +92,9 @@ def main():
     print("\n=== Training Sci-Kit Learn Gaussian Naive Bayes ===")
     sklearn_gnb_path = "saved_models/sklearn_gnb.pkl"
 
+    # running this program a second time will skip training and use the saved model
     if os.path.exists(sklearn_gnb_path):
-        print("Loading saved Scikit-Learn GaussianNB model...")
+        print("Loading saved Scikit-Learn GaussianNB model...") 
         sklearn_gnb = joblib.load(sklearn_gnb_path)
     else:
         print("Training Scikit-Learn GaussianNB and saving...")
