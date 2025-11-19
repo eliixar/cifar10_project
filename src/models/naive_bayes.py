@@ -44,7 +44,7 @@ class GaussianNaiveBayes:
                 # take log of prior
                 prior = np.log(self.priors[c]) 
                 # use log to avoid underflow/losing small data
-                likelihood = np.sum(np.log(self.gaussian_pdf(x, self.means[c], self.vars[c])))
+                likelihood = np.sum(np.log(self.gaussian_pdf(x, self.means[c], self.vars[c]) + 1e-12))
                 posteriors.append(prior + likelihood) # pick class with highest probability
 
             # append the most likely class c for sample x to the list 
