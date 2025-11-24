@@ -98,9 +98,7 @@ def load_or_train_vgg(train_loader, epochs=10, lr=0.01):
         print("Training VGG11 CNN...")
         return train_vgg(model, train_loader, epochs, lr, save_path)
 
-# ---------------------------------------------------------
-# PREDICT FUNCTION
-# ---------------------------------------------------------
+# prediction
 
 def predict_vgg(model, test_loader):
     device = "cuda" if torch.cuda.is_available() else "cpu"
