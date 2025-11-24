@@ -67,22 +67,22 @@ def full_report(name, y_true, y_pred):
 
 
 
-# ---------------------------------------------------------
-# MAIN SCRIPT
-# ---------------------------------------------------------
+"""
+Main function that loads features.
+Trains all models and saves them to disk.
+If the program is run again, skips the training and uses
+the saved model. Tests model variations.
+Reports accuracy, precision, recall and f1.
+"""
 def main():
 
-    # -----------------------------------------------------
-    # LOAD FEATURES
-    # -----------------------------------------------------
+    # load features
     print("\n=== Loading Features ===")
     X_train, y_train, X_test, y_test = load_features()
 
 
 
-    # -----------------------------------------------------
-    # CUSTOM GAUSSIAN NAIVE BAYES
-    # -----------------------------------------------------
+    # gaussian naive bayes model that we coded
     print("\n=== Training Custom Gaussian Naive Bayes ===")
     custom_gnb_path = "saved_models/custom_gnb.pkl"
 
@@ -100,9 +100,7 @@ def main():
 
 
 
-    # -----------------------------------------------------
-    # SCIKIT GAUSSIAN NB
-    # -----------------------------------------------------
+    # gaussian model from sci kit learn
     print("\n=== Training Sci-Kit Learn Gaussian Naive Bayes ===")
     sklearn_gnb_path = "saved_models/sklearn_gnb.pkl"
 
@@ -120,9 +118,7 @@ def main():
 
 
 
-    # -----------------------------------------------------
-    # CUSTOM DECISION TREE (depth=50)
-    # -----------------------------------------------------
+    # decision tree that we coded
     print("\n=== Training Custom Decision Tree ===")
     dt_path = "saved_models/custom_decision_tree.pkl"
 
@@ -140,9 +136,7 @@ def main():
 
 
 
-    # -----------------------------------------------------
-    # DECISION TREE DEPTH EXPERIMENT
-    # -----------------------------------------------------
+    # decision tree depth 
     print("\n=== Decision Tree Depth Experiment ===")
     depths = [2, 5, 10, 20, 30]
 
@@ -165,32 +159,18 @@ def main():
     for d, acc in depth_results:
         print(f"Depth {d} → accuracy = {acc:.3f}")
 
-
-
-    # -----------------------------------------------------
-    # SCIKIT DECISION TREE
-    # -----------------------------------------------------
+    # sci kit learn tree
     from src.models.sklearn_decision_tree import run_sklearn_decision_tree
 
     print("\n=== Training Scikit-Learn Decision Tree (max_depth=50) ===")
     y_true_dt, y_pred_dt = run_sklearn_decision_tree()
     full_report("Scikit-Learn Decision Tree (Depth 50)", y_true_dt, y_pred_dt)
 
-
-
-    # -----------------------------------------------------
-    # BASE MLP (Part 5.1)
-    # -----------------------------------------------------
     print("\n=== Training Base MLP ===")
 
     base_mlp, y_pred_base = load_base_mlp(X_train, y_train, X_test, y_test)
     full_report("MLP Base Architecture", y_test, y_pred_base)
 
-
-
-    # -----------------------------------------------------
-    # MLP DEPTH EXPERIMENT (Part 5.2)
-    # -----------------------------------------------------
     print("\n=== MLP Depth Experiment ===")
 
     depth_values = [1, 2, 3, 4]
@@ -206,11 +186,6 @@ def main():
     for d, acc in depth_summary:
         print(f"Depth {d}: accuracy = {acc:.3f}")
 
-
-
-    # -----------------------------------------------------
-    # MLP WIDTH EXPERIMENT (Part 5.3)
-    # -----------------------------------------------------
     print("\n=== MLP Hidden Size experiment ===")
 
     from src.models.mlp_width_experiment import load_or_train_width, predict_width
