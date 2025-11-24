@@ -8,7 +8,8 @@ import os
 # local modules
 from src.models.naive_bayes import GaussianNaiveBayes
 from src.models.decision_tree import DecisionTreeClassifier
-
+from src.models.mlp_main import train_mlp, predict_mlp, load_base_mlp
+from src.models.mlp_depth_experiment import train_and_eval_depth
 
 # class labels for matrix legend
 CIFAR10_LABELS = [
@@ -16,7 +17,6 @@ CIFAR10_LABELS = [
     "deer", "dog", "frog", "horse",
     "ship", "truck"
 ]
-
 
 os.makedirs("saved_models", exist_ok=True)
 os.makedirs("confusion_matrices", exist_ok=True)
@@ -31,6 +31,7 @@ def load_features():
     X_test  = np.load("features/X_test_50.npy")
     y_test  = np.load("features/y_test.npy")
     return X_train, y_train, X_test, y_test
+
 
 """
 Prints a report for the model being tested, including all needed metrics.
@@ -54,26 +55,34 @@ def full_report(name, y_true, y_pred):
     plt.colorbar()
 
     plt.xticks(ticks=np.arange(10), labels=CIFAR10_LABELS, rotation=45, ha="right", fontsize=10)
-    plt.yticks(ticks=np.arange(10), labels=CIFAR10_LABELS, fontsize=10) # add class labels
+    plt.yticks(ticks=np.arange(10), labels=CIFAR10_LABELS, fontsize=10)
 
     plt.xlabel("Predicted Label", fontsize=12, fontweight="bold")
     plt.ylabel("True Label", fontsize=12, fontweight="bold")
     plt.subplots_adjust(bottom=0.25)
 
     filename = name.replace(" ", "_").replace("(", "").replace(")", "").lower()
-    plt.savefig(f"confusion_matrices/{filename}.png")  # save cm to a folder
+    plt.savefig(f"confusion_matrices/{filename}.png")
     plt.close()
 
 
-# main
+
+# ---------------------------------------------------------
+# MAIN SCRIPT
+# ---------------------------------------------------------
 def main():
 
-    # load features
+    # -----------------------------------------------------
+    # LOAD FEATURES
+    # -----------------------------------------------------
     print("\n=== Loading Features ===")
     X_train, y_train, X_test, y_test = load_features()
 
 
-    # custom gnb model. train once, save it then use it
+
+    # -----------------------------------------------------
+    # CUSTOM GAUSSIAN NAIVE BAYES
+    # -----------------------------------------------------
     print("\n=== Training Custom Gaussian Naive Bayes ===")
     custom_gnb_path = "saved_models/custom_gnb.pkl"
 
@@ -90,13 +99,15 @@ def main():
     full_report("Custom GaussianNB", y_test, y_pred_custom)
 
 
-   # sci-kit learn gnb. train it once then use it
+
+    # -----------------------------------------------------
+    # SCIKIT GAUSSIAN NB
+    # -----------------------------------------------------
     print("\n=== Training Sci-Kit Learn Gaussian Naive Bayes ===")
     sklearn_gnb_path = "saved_models/sklearn_gnb.pkl"
 
-    # running this program a second time will skip training and use the saved model
     if os.path.exists(sklearn_gnb_path):
-        print("Loading saved Scikit-Learn GaussianNB model...") 
+        print("Loading saved Scikit-Learn GaussianNB model...")
         sklearn_gnb = joblib.load(sklearn_gnb_path)
     else:
         print("Training Scikit-Learn GaussianNB and saving...")
@@ -107,39 +118,42 @@ def main():
     y_pred_sklearn = sklearn_gnb.predict(X_test)
     full_report("Scikit-Learn GaussianNB", y_test, y_pred_sklearn)
 
-        
-    # custom decision tree training
-    print("\n=== Training Custom Decision Tree ===")
 
+
+    # -----------------------------------------------------
+    # CUSTOM DECISION TREE (depth=50)
+    # -----------------------------------------------------
+    print("\n=== Training Custom Decision Tree ===")
     dt_path = "saved_models/custom_decision_tree.pkl"
 
     if os.path.exists(dt_path):
         print("Loading saved Decision Tree model...")
         dt = joblib.load(dt_path)
     else:
-        print("Training Decision Tree (max_depth=50) and saving.../n "
-        "(Results may take a few minutes to process.)")
+        print("Training Decision Tree (max_depth=50) and saving...\n (Results may take a few minutes.)")
         dt = DecisionTreeClassifier(max_depth=50)
         dt.fit(X_train, y_train)
         joblib.dump(dt, dt_path)
 
     y_pred_dt = dt.predict(X_test)
     full_report("Custom Decision Tree", y_test, y_pred_dt)
-    
-    # Decision Tree depth experiment
+
+
+
+    # -----------------------------------------------------
+    # DECISION TREE DEPTH EXPERIMENT
+    # -----------------------------------------------------
     print("\n=== Decision Tree Depth Experiment ===")
     depths = [2, 5, 10, 20, 30]
 
-    # even at small depths the process takes long, so we reduce the data size
     X_small = X_train[:2000]
     y_small = y_train[:2000]
 
     depth_results = []
 
     for d in depths:
-        print(f"\nTraining Decision Tree with max_depth = {d} (Results may take a few minutes to process.)")
+        print(f"\nTraining Decision Tree with max_depth = {d}")
         dt = DecisionTreeClassifier(max_depth=d)
-        # use small data
         dt.fit(X_small, y_small)
         y_pred_d = dt.predict(X_test)
 
@@ -147,18 +161,82 @@ def main():
         depth_results.append((d, acc_d))
         print(f"Test accuracy at depth {d}: {acc_d:.3f}")
 
-    print("\nSummary of depth experiment (depth, accuracy):")
+    print("\nSummary of depth experiment:")
     for d, acc in depth_results:
-        print(f"Depth {d:2d} → accuracy = {acc:.3f}")
+        print(f"Depth {d} → accuracy = {acc:.3f}")
 
-    #  train scikit learn decision tree 
+
+
+    # -----------------------------------------------------
+    # SCIKIT DECISION TREE
+    # -----------------------------------------------------
     from src.models.sklearn_decision_tree import run_sklearn_decision_tree
 
     print("\n=== Training Scikit-Learn Decision Tree (max_depth=50) ===")
     y_true_dt, y_pred_dt = run_sklearn_decision_tree()
     full_report("Scikit-Learn Decision Tree (Depth 50)", y_true_dt, y_pred_dt)
 
+
+
+    # -----------------------------------------------------
+    # BASE MLP (Part 5.1)
+    # -----------------------------------------------------
+    print("\n=== Training Base MLP ===")
+
+    base_mlp, y_pred_base = load_base_mlp(X_train, y_train, X_test, y_test)
+    full_report("MLP Base Architecture", y_test, y_pred_base)
+
+
+
+    # -----------------------------------------------------
+    # MLP DEPTH EXPERIMENT (Part 5.2)
+    # -----------------------------------------------------
+    print("\n=== MLP Depth Experiment ===")
+
+    depth_values = [1, 2, 3, 4]
+    depth_summary = []
+
+    for d in depth_values:
+        print(f"\nTraining MLP with depth = {d} hidden layer(s)")
+        acc_d, preds_d = train_and_eval_depth(d, X_train, y_train, X_test, y_test)
+        full_report(f"MLP Depth {d}", y_test, preds_d)
+        depth_summary.append((d, acc_d))
+
+    print("\nSummary of MLP Depth Experiment:")
+    for d, acc in depth_summary:
+        print(f"Depth {d}: accuracy = {acc:.3f}")
+
+
+
+    # -----------------------------------------------------
+    # MLP WIDTH EXPERIMENT (Part 5.3)
+    # -----------------------------------------------------
+    print("\n=== MLP Hidden Size experiment ===")
+
+    from src.models.mlp_width_experiment import load_or_train_width, predict_width
+
+    hidden_sizes = [128, 256, 512, 1024]
+    width_summary = []
+
+    for H in hidden_sizes:
+        print(f"\nTraining MLP with hidden size H = {H}")
+
+        model_H = load_or_train_width(H, X_train, y_train)
+        preds_H = predict_width(model_H, X_test)
+
+        acc_H = (preds_H == y_test).mean()
+        width_summary.append((H, acc_H))
+
+        full_report(f"MLP Hidden Size {H}", y_test, preds_H)
+
+    print("\nSummary of MLP Hidden Size Experiment:")
+    for H, acc in width_summary:
+        print(f"H={H}: accuracy = {acc:.3f}")
+
+
+
     print("\n=== DONE. Confusion matrices saved as PNG files. ===")
+
 
 
 if __name__ == "__main__":
