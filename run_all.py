@@ -10,6 +10,8 @@ from src.models.naive_bayes import GaussianNaiveBayes
 from src.models.decision_tree import DecisionTreeClassifier
 from src.models.mlp_main import train_mlp, predict_mlp, load_base_mlp
 from src.models.mlp_depth_experiment import train_and_eval_depth
+from src.models.vgg11 import evaluate_vgg11, load_or_train_vgg11
+from src.models.vgg_depth_experiment import run_vgg_depth_experiment
 
 # class labels for matrix legend
 CIFAR10_LABELS = [
@@ -208,7 +210,18 @@ def main():
     for H, acc in width_summary:
         print(f"H={H}: accuracy = {acc:.3f}")
 
+    # vgg11 (fed with raw cifar10 images)
+    print("\n=== VGG11 Experiment ===")
 
+    print("\n=== VGG11 Evaluation ===")
+    y_true_vgg, y_pred_vgg = evaluate_vgg11()
+    full_report("VGG11", y_true_vgg, y_pred_vgg)
+
+    print("\n=== VGG Depth Experiment ===")
+    vgg_depth_results = run_vgg_depth_experiment()
+
+    for depth_factor, acc, _, _ in vgg_depth_results:
+        print(f"Depth Factor {depth_factor}: Accuracy = {acc:.4f}")
 
     print("\n=== DONE. Confusion matrices saved as PNG files. ===")
 

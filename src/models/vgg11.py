@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
 import os
-
+from cifar_loader import get_cifar10_loaders
 """
 VGG11 implementation for CIFAR-10.
 Includes:
@@ -56,59 +57,75 @@ class VGG11(nn.Module):
 
 # training function
 
-def train_vgg(model, train_loader, epochs=10, lr=0.01, save_path="saved_models/vgg11.pth"):
+def train_vgg11(save_path="saved_models/vgg11.pth", epochs=10, lr=0.001):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = model.to(device)
+    train_loader, test_loader, classes = get_cifar10_loaders()
 
+    model = VGG11().to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
-    model.train()
     for epoch in range(epochs):
-        total_loss = 0
+        model.train()
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
 
             optimizer.zero_grad()
-            outs = model(images)
-            loss = criterion(outs, labels)
+            outputs = model(images)
+            loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
 
-            total_loss += loss.item()
-
-        print(f"Epoch {epoch+1}/{epochs}  |  Loss = {total_loss:.3f}")
+        print(f"Epoch {epoch+1}/{epochs} — Loss = {loss.item():.4f}")
 
     torch.save(model.state_dict(), save_path)
-    print(f"Saved VGG11 model to {save_path}")
-
+    print("VGG11 saved.")
     return model
 
-# load or train model
-
-def load_or_train_vgg(train_loader, epochs=10, lr=0.01):
-    save_path = "saved_models/vgg11.pth"
-    model = VGG11()
-
-    if os.path.exists(save_path):
+def load_or_train_vgg11(path="saved_models/vgg11.pth"):
+    if os.path.exists(path):
         print("Loading saved VGG11 model...")
-        model.load_state_dict(torch.load(save_path))
+        model = VGG11()
+        model.load_state_dict(torch.load(path, map_location="cpu"))
         return model
     else:
-        print("Training VGG11 CNN...")
-        return train_vgg(model, train_loader, epochs, lr, save_path)
+        print("Training VGG11 (this may take a few minutes)...")
+        return train_vgg11(path)
 
-# prediction
-
-def predict_vgg(model, test_loader):
+def predict_vgg11(model, test_loader):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = model.to(device).eval()
+    model.eval()
 
-    preds = []
+    all_preds = []
+    all_labels = []
+
     with torch.no_grad():
-        for images, _ in test_loader:
+        for images, labels in test_loader:
             images = images.to(device)
-            out = model(images)
-            preds.extend(torch.argmax(out, dim=1).cpu().numpy())
+            outputs = model(images)
+            preds = outputs.argmax(dim=1).cpu().numpy()
 
-    return preds
+            all_preds.extend(preds)
+            all_labels.extend(labels.numpy())
+
+    return np.array(all_labels), np.array(all_preds)
+
+# evaluation function
+def evaluate_vgg11(save_path="saved_models/vgg11.pth"):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    _, test_loader, _ = get_cifar10_loaders()
+
+    model = VGG11().to(device)
+    model.load_state_dict(torch.load(save_path, map_location=device))
+
+    y_true, y_pred = predict_vgg11(model, test_loader)
+
+    accuracy = (y_true == y_pred).mean()
+    print(f"VGG11 Test Accuracy = {accuracy:.4f}")
+
+    return y_true, y_pred
+
+# entry point
+def run_vgg11():
+    train_vgg11()
+    evaluate_vgg11()
