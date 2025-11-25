@@ -1,4 +1,14 @@
+confusion_matrices/
+saved_models/
 data/
+*.pt
+*.pth
+*.pkl
+*.npy
+*.npz
+*.png
+*.zip
+
 __pycache__/
 *.tar.gz
 *.pyc
