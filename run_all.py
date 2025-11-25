@@ -12,6 +12,7 @@ from src.models.mlp_main import train_mlp, predict_mlp, load_base_mlp
 from src.models.mlp_depth_experiment import train_and_eval_depth
 from src.models.vgg11 import evaluate_vgg11, load_or_train_vgg11
 from src.models.vgg_depth_experiment import run_vgg_depth_experiment
+from src.models.vgg_kernels_experiment import run_vgg_kernel_experiment
 
 # class labels for matrix legend
 CIFAR10_LABELS = [
@@ -83,7 +84,7 @@ def main():
     X_train, y_train, X_test, y_test = load_features()
 
 
-
+    # section 3.1
     # gaussian naive bayes model that we coded
     print("\n=== Training Custom Gaussian Naive Bayes ===")
     custom_gnb_path = "saved_models/custom_gnb.pkl"
@@ -101,8 +102,7 @@ def main():
     full_report("Custom GaussianNB", y_test, y_pred_custom)
 
 
-
-    # gaussian model from sci kit learn
+    # gaussian model from sci kit learn (section 3.2)
     print("\n=== Training Sci-Kit Learn Gaussian Naive Bayes ===")
     sklearn_gnb_path = "saved_models/sklearn_gnb.pkl"
 
@@ -118,9 +118,7 @@ def main():
     y_pred_sklearn = sklearn_gnb.predict(X_test)
     full_report("Scikit-Learn GaussianNB", y_test, y_pred_sklearn)
 
-
-
-    # decision tree that we coded
+    # decision tree that we coded (section 4.1)
     print("\n=== Training Custom Decision Tree ===")
     dt_path = "saved_models/custom_decision_tree.pkl"
 
@@ -137,9 +135,9 @@ def main():
     full_report("Custom Decision Tree", y_test, y_pred_dt)
 
 
-
-    # decision tree depth 
-    print("\n=== Decision Tree Depth Experiment ===")
+    # decision tree depth (section 4.2)
+    print("\n=== Decision Tree Depth Experiment ===\n"
+          "Please allow a few minutes per depth for results to be generated.")
     depths = [2, 5, 10, 20, 30]
 
     X_small = X_train[:2000]
@@ -157,22 +155,24 @@ def main():
         depth_results.append((d, acc_d))
         print(f"Test accuracy at depth {d}: {acc_d:.3f}")
 
-    print("\nSummary of depth experiment:")
-    for d, acc in depth_results:
-        print(f"Depth {d} → accuracy = {acc:.3f}")
+        # confusion matrix for each depth
+        full_report(f"Decision Tree Depth {d}", y_test, y_pred_d)
 
-    # sci kit learn tree
+
+    # sci kit learn tree (section 4.3)
     from src.models.sklearn_decision_tree import run_sklearn_decision_tree
 
     print("\n=== Training Scikit-Learn Decision Tree (max_depth=50) ===")
     y_true_dt, y_pred_dt = run_sklearn_decision_tree()
     full_report("Scikit-Learn Decision Tree (Depth 50)", y_true_dt, y_pred_dt)
 
+    # section 5.1
     print("\n=== Training Base MLP ===")
 
     base_mlp, y_pred_base = load_base_mlp(X_train, y_train, X_test, y_test)
     full_report("MLP Base Architecture", y_test, y_pred_base)
 
+    # section 5.2
     print("\n=== MLP Depth Experiment ===")
 
     depth_values = [1, 2, 3, 4]
@@ -188,6 +188,7 @@ def main():
     for d, acc in depth_summary:
         print(f"Depth {d}: accuracy = {acc:.3f}")
 
+    # section 5.3
     print("\n=== MLP Hidden Size experiment ===")
 
     from src.models.mlp_width_experiment import load_or_train_width, predict_width
@@ -211,17 +212,33 @@ def main():
         print(f"H={H}: accuracy = {acc:.3f}")
 
     # vgg11 (fed with raw cifar10 images)
-    print("\n=== VGG11 Experiment ===")
-
+    # section 6.1
     print("\n=== VGG11 Evaluation ===")
+    print("\n=== Loading or Training VGG11 ===")
+    vgg_model = load_or_train_vgg11()
+
     y_true_vgg, y_pred_vgg = evaluate_vgg11()
     full_report("VGG11", y_true_vgg, y_pred_vgg)
 
+
+    # section 6.2
     print("\n=== VGG Depth Experiment ===")
     vgg_depth_results = run_vgg_depth_experiment()
 
-    for depth_factor, acc, _, _ in vgg_depth_results:
+    for depth_factor, acc, y_true_d, y_pred_d in vgg_depth_results:
         print(f"Depth Factor {depth_factor}: Accuracy = {acc:.4f}")
+        full_report(f"VGG Depth {depth_factor}", y_true_d, y_pred_d)
+
+
+    # section 6.3
+    print("\n=== VGG Kernel Size Experiment ===\n" \
+    "Results may take a few minutes to load.")
+    kernel_results = run_vgg_kernel_experiment()
+
+    for k, acc, y_true_k, y_pred_k in kernel_results:
+        print(f"Kernel {k}×{k}: Accuracy = {acc:.4f}")
+        full_report(f"VGG Kernel {k}", y_true_k, y_pred_k)
+
 
     print("\n=== DONE. Confusion matrices saved as PNG files. ===")
 

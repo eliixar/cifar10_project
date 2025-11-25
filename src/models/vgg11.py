@@ -4,6 +4,13 @@ import torch.optim as optim
 import numpy as np
 import os
 from cifar_loader import get_cifar10_loaders
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import numpy as np
+
+torch.backends.cudnn.benchmark = True
 """
 VGG11 implementation for CIFAR-10.
 Includes:
@@ -56,8 +63,8 @@ class VGG11(nn.Module):
         return self.classifier(x)
 
 # training function
-
-def train_vgg11(save_path="saved_models/vgg11.pth", epochs=10, lr=0.001):
+# use 3 epochs to run faster
+def train_vgg11(save_path="saved_models/vgg11.pth", epochs=1, lr=0.001):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     train_loader, test_loader, classes = get_cifar10_loaders()
 
@@ -124,6 +131,20 @@ def evaluate_vgg11(save_path="saved_models/vgg11.pth"):
     print(f"VGG11 Test Accuracy = {accuracy:.4f}")
 
     return y_true, y_pred
+
+
+
+def save_confusion_matrix(y_true, y_pred, classes, filename):
+    cm = confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=False, cmap="Blues", fmt="d",
+                xticklabels=classes, yticklabels=classes)
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
+    plt.title(filename.replace(".png", ""))
+    plt.tight_layout()
+    plt.savefig(f"confusion_matrices/{filename}")
+    plt.close()
 
 # entry point
 def run_vgg11():
